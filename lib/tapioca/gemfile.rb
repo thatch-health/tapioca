@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "tapioca/bundler_ext/auto_require_hook"
+require "tapioca/gemfile/ruby_core_gem"
 
 module Tapioca
   class Gemfile

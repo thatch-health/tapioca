@@ -231,6 +231,10 @@ module Tapioca
       type: :boolean,
       desc: "Include comments with source location when generating RBIs",
       default: true
+    option :include_core_classes,
+      type: :boolean,
+      desc: "Generate RBIs for Ruby core classes (String, Array, etc.) that are normally provided by Sorbet",
+      default: false
     option :exported_gem_rbis,
       type: :boolean,
       desc: "Include RBIs found in the `rbi/` directory of the gem",
@@ -294,6 +298,7 @@ module Tapioca
         file_header: options[:file_header],
         include_doc: options[:doc],
         include_loc: options[:loc],
+        include_core_classes: options[:include_core_classes],
         include_exported_rbis: options[:exported_gem_rbis],
         number_of_workers: options[:workers],
         auto_strictness: options[:auto_strictness],

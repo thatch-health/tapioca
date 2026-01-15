@@ -15,22 +15,30 @@ module Tapioca
       #: ^(String error) -> void
       attr_reader :error_handler
 
-      #: (Gemfile::GemSpec gem, error_handler: ^(String error) -> void, ?include_doc: bool, ?include_loc: bool) -> void
+      #: (
+      #|   Gemfile::GemSpec gem,
+      #|   error_handler: ^(String error) -> void,
+      #|   ?include_doc: bool,
+      #|   ?include_loc: bool,
+      #|   ?include_core_classes: bool
+      #| ) -> void
       def initialize(
         gem,
         error_handler:,
         include_doc: false,
-        include_loc: false
+        include_loc: false,
+        include_core_classes: false
       )
         @root = RBI::Tree.new #: RBI::Tree
         @gem = gem
         @seen = Set.new #: Set[String]
         @alias_namespace = Set.new #: Set[String]
         @error_handler = error_handler
+        @include_core_classes = include_core_classes #: bool
 
         @events = [] #: Array[Gem::Event]
 
-        @payload_symbols = Static::SymbolLoader.payload_symbols #: Set[String]
+        @payload_symbols = include_core_classes ? Set.new : Static::SymbolLoader.payload_symbols #: Set[String]
         @bootstrap_symbols = load_bootstrap_symbols(@gem) #: Set[String]
 
         @bootstrap_symbols.each { |symbol| push_symbol(symbol) }
@@ -115,6 +123,11 @@ module Tapioca
 
       #: ((String | Symbol) name) -> bool
       def constant_in_gem?(name)
+        # For RubyCoreGem, check if the constant name is in our core classes list
+        if Gemfile::RubyCoreGem === @gem
+          return @gem.core_symbols.include?(name.to_s.delete_prefix("::"))
+        end
+
         loc = const_source_location(name)
 
         # If the source location of the constant isn't available or is "(eval)", all bets are off.
@@ -192,6 +205,11 @@ module Tapioca
 
       #: (Gemfile::GemSpec gem) -> Set[String]
       def load_bootstrap_symbols(gem)
+        # Special handling for RubyCoreGem - use its predefined core classes
+        if Gemfile::RubyCoreGem === gem
+          return gem.core_symbols
+        end
+
         engine_symbols = Static::SymbolLoader.engine_symbols(gem)
         gem_symbols = Static::SymbolLoader.gem_symbols(gem)
 
@@ -455,6 +473,12 @@ module Tapioca
 
       #: (T::Module[top] constant, ?strict: bool) -> bool
       def defined_in_gem?(constant, strict: true)
+        # For RubyCoreGem, check if the constant name is in our core classes list
+        if Gemfile::RubyCoreGem === @gem
+          constant_name = name_of(constant)
+          return @gem.core_symbols.include?(constant_name.to_s.delete_prefix("::"))
+        end
+
         files = get_file_candidates(constant)
           .merge(Runtime::Trackers::ConstantDefinition.files_for(constant))
 

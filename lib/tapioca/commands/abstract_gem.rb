@@ -19,6 +19,7 @@ module Tapioca
       #|   file_header: bool,
       #|   include_doc: bool,
       #|   include_loc: bool,
+      #|   include_core_classes: bool,
       #|   include_exported_rbis: bool,
       #|   ?number_of_workers: Integer?,
       #|   ?auto_strictness: bool,
@@ -39,6 +40,7 @@ module Tapioca
         file_header:,
         include_doc:,
         include_loc:,
+        include_core_classes:,
         include_exported_rbis:,
         number_of_workers: nil,
         auto_strictness: true,
@@ -70,6 +72,7 @@ module Tapioca
         @expected_rbis = nil #: Hash[String, String]?
         @include_doc = include_doc #: bool
         @include_loc = include_loc #: bool
+        @include_core_classes = include_core_classes #: bool
         @include_exported_rbis = include_exported_rbis
         @halt_upon_load_error = halt_upon_load_error
       end
@@ -94,6 +97,7 @@ module Tapioca
             gem,
             include_doc: @include_doc,
             include_loc: @include_loc,
+            include_core_classes: @include_core_classes,
             error_handler: ->(error) {
               say_error(error, :bold, :red)
             },

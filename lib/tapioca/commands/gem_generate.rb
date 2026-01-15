@@ -53,6 +53,18 @@ module Tapioca
         return @bundle.dependencies if gem_names.empty?
 
         (gem_names - @exclude).each_with_object([]) do |gem_name, gems|
+          # Special handling for ruby-core synthetic gem
+          if gem_name == "ruby-core"
+            unless @include_core_classes
+              raise Tapioca::Error, set_color(
+                "Error: --include-core-classes must be enabled when generating RBIs for ruby-core",
+                :red
+              )
+            end
+            gems << Gemfile::RubyCoreGem.new
+            next
+          end
+
           gem = @bundle.gem(gem_name)
 
           if gem.nil?
